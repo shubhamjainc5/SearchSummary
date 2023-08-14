@@ -63,7 +63,8 @@ class QuestionAnswerSet(BaseModel):
 
 class RelevantQuestionAnswers(BaseModel):
 
-    relqa: List[QuestionAnswerSet] = Field(description="a set of generated question and their corresponding summarized answers.")
+    relqa: List[QuestionAnswerSet] = Field(description="a set of generated questions(which are related to given user query) and summarized answers(whose answers also lies in the provided search results).")
+    
 
 
 @timed
@@ -209,7 +210,7 @@ def generate_qa(paras: List[str], query: str) -> (List[Dict[str, str]], int, flo
             request_timeout=60
         )
 
-        template = "Ignore previous instructions.\n you are a part of search engine whose job is to first find whether answer to the given user's query exist in the provided search results, if yes then you should generate pair of new questions(MUST be related to given user's query) and their summarized answers( MUST come from given search results only.)"
+        template = "Ignore previous instructions.\n you are a part of search engine whose job is to first find whether answer to the given user's query exist in the provided search results, if yes then only you MUST generate pair of new questions(MUST be related to given user's query) and their summarized answers( MUST come from given search results only.)"
         system_message_prompt = SystemMessagePromptTemplate.from_template(template)
 
         qa_parser = PydanticOutputParser(pydantic_object=RelevantQuestionAnswers)
@@ -250,13 +251,13 @@ def generate_qa(paras: List[str], query: str) -> (List[Dict[str, str]], int, flo
         try:
             start = time.time()
             qa_result = qa_parser.parse(generated_qa).json()
-            qa_result = json.loads(qa_result)['relqa']
+            qa_result = json.loads(qa_result)
             Logger.info('\n Langchain json generated qa parsed: {0}'.format(qa_result))
             Logger.debug("langchain parsing ran in {}s".format(round(time.time() - start, 4)))
         except Exception as lang_err:
             Logger.error(traceback.format_exc())
             print(lang_err)
-            qa_result = generated_qa[generated_qa.find('['): generated_qa.rfind(']') + 1]
+            qa_result = generated_qa[generated_qa.find('{'): generated_qa.rfind('}') + 1]
             qa_result = ast.literal_eval(qa_result)
             Logger.info('\n Regex json qa content parsed: {0}'.format(qa_result))
 
@@ -317,10 +318,10 @@ if __name__ == "__main__":
 
     #query = "Why does earth rotate around sun?"
     #query = "how to remove hard-water stains?"
-    #query = "how to remove dirt from my furniture?"
+    query = "how to remove dirt from my furniture?"
     #query = "fbsjfb sjfjs sjnosn jdjdj"
     #query = "What are VOCs?"
-    query="who is Obama?"
+    #query="who is Obama?"
 
     summary, api_cnt, api_tokens, status = generate_summary(paras, query)
 

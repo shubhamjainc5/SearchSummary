@@ -21,13 +21,15 @@ User query:
 Following are the list of search results fetched by search engine:
 {paras}
 
-Your task is to understand user's query first and find if the answer for that query is available in any of the above search results .  
-Only when the answer to the user's search query is available , you should generate pair of question and summarized answers which are related to given user query and whose answers also lies in the provided search results.  
+Your task is to understand given user's query first
+Set key "answer_found"=True only if answer for given user's query is available only in provided search results.
+Only when answer_found==True => you should generate pair of questions(which are related to given user query) and summarized answers(whose answers also lies in the provided search results).
+if answer_found==False =>  "relqa"=[] (no need to generate question and summarized answers)
     
 Also you must follow below instructions before coming up with the question and summarized answers:  
 1. Generated summarized answers MUST always come from the provided search results.  
-2. Generated question MUST be related to giver user's query but should not be exactly same.  
-3. If you can't understand user's query or user's query seems irrelevant to the provided search results, then you should not generate anything and simply returns empty array in output json.  
+2. Generated question MUST be related to giver user's query but should not be exactly same.
+3. If you can't understand user's query or user's query seems irrelevant to the provided search results, then you should not generate anything ,set answer_found==False & relqa=[] array in output json. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.  
 
 \n{format_instructions}
 Output JSON:
