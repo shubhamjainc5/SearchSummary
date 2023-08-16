@@ -1,6 +1,6 @@
 
 import time
-from logging_handler import Logger
+from utils.logging_handler import Logger
 from functools import wraps
 
 

@@ -10,27 +10,23 @@ Your task is to understand user's query first and check if the answer for that q
 Also you must follow below instructions before coming up with the answer:    
 1. the final summarized answer MUST always come from the provided search results.    
 2. If you can't come up with the summarized answer from the provided search results or user's query seems to be not relevant to the  provided search results, then you MUST reply with "NOT FOUND" as summarized answer. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.
+3. To ensure the credibility of summarized answer, Be sure you MUST always include a correct citations number whenever necessary in brackets as [1], [2]...etc. based on provided search results after each phrase or sentence to indicate which part of provided search results supports summarized answer.
 \n{format_instructions}
 Output JSON:
 """
 
 search_qa = """
-User query:
-{query}
-
 Following are the list of search results fetched by search engine:
 {paras}
 
-Your task is to understand given user's query first
-Set key "answer_found"=True only if answer for given user's query is available only in provided search results.
-Only when answer_found==True => you should generate pair of questions(which are related to given user query) and summarized answers(whose answers also lies in the provided search results).
-if answer_found==False =>  "relqa"=[] (no need to generate question and summarized answers)
+Your task is to generate pair of questions and summarized answers(must come from provided search results).
     
 Also you must follow below instructions before coming up with the question and summarized answers:  
-1. Generated summarized answers MUST always come from the provided search results.  
-2. Generated question MUST be related to giver user's query but should not be exactly same.
-3. If you can't understand user's query or user's query seems irrelevant to the provided search results, then you should not generate anything ,set answer_found==False & relqa=[] array in output json. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.  
-
+1. Generated question and summarized answers MUST always come from the provided search results.  
+2. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.
+3. Generate as many as possible combinations of distinct question and summarized answers.
+4. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.
+5. To ensure the credibility of summarized answers for each question, Be sure you MUST always include a correct citations number whenever necessary in brackets as [1], [2]...etc. based on provided search results after each phrase or sentence to indicate which part of provided search results supports summarized answer.
 \n{format_instructions}
 Output JSON:
 """
