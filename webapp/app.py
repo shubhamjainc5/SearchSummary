@@ -8,6 +8,9 @@ import time
 from pydantic import BaseModel
 from typing import Dict, List
 import json
+import traceback
+from collections import OrderedDict
+import re
 
 
 app = FastAPI()
@@ -24,12 +27,12 @@ app.add_middleware(
 class Summary(BaseModel):
     request_id: str
     user_query: str
-    search_results: List
+    search_results: Dict
 
 class RelQA(BaseModel):
     request_id: str
     user_query: str
-    search_results: List
+    search_results: Dict
 
 @app.post("/llm_api/get_summary")
 async def get_summary(input: Summary):
@@ -46,22 +49,40 @@ async def get_summary(input: Summary):
     # query = "fbsjfb sjfjs sjnosn jdjdj"
     # query = "What are VOCs?"
     # query="who is Obama?"
+    try:
+        request_id = input.request_id
+        query = input.user_query
+        Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
+
+        paras = [ p['content']  for p in input.search_results['content']]
+        Logger.info(f"Search results for '{request_id}' request:  {paras}")
+
+        Logger.info(f"Running on {os.getpid()}")
+
+        raw_summary, api_cnt, api_tokens, status = await generate_summary(paras, query)
+
+        Logger.info(f"{api_cnt} API Calls were made with an average of {api_tokens} tokens per call for summary generation")
+
+        print(raw_summary)
 
 
-    request_id = input.request_id
-    query = input.user_query
-    Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
-
-    paras = [ p['content']  for p in input.search_results]
-    Logger.info(f"Search results for '{request_id}' request:  {paras}")
-
-    Logger.info(f"Running on {os.getpid()}")
-
-    summary, api_cnt, api_tokens, status = await generate_summary(paras, query)
-
-    Logger.info(f"{api_cnt} API Calls were made with an average of {api_tokens} tokens per call for summary generation")
-
-    print(summary)
+        if raw_summary['Summary']!='':
+            summary={}
+            citations = [c.strip('[').strip(']') for c in re.findall(r'\[\d+\]' ,raw_summary['Summary'])]
+            citations = list(OrderedDict.fromkeys([int(c) for c in citations if c.isdigit()]))
+            summary['Summary'] = re.sub(r'\[[^]]*\]','',raw_summary['Summary'])
+            ct = []
+            if len(citations)>0:
+                for c in citations:
+                    if c<len(paras):
+                        ct.append(input.search_results['content'][c-1]['meta']['Ind_number'])
+            summary['citations']=ct
+        else:
+            summary = {'Summary':'', 'citations':[]}
+        
+    except Exception as e:
+        Logger.error(traceback.format_exc())
+        summary = {'Summary':'', 'citations':[]}
 
     return summary
 
@@ -82,25 +103,48 @@ async def get_relqa(input: RelQA):
     # #query = "What are VOCs?"
     # query="who is Obama?"
 
-    request_id = input.request_id
-    query = input.user_query
-    Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
+    try:
 
-    paras = [ p['content']  for p in input.search_results]
-    Logger.info(f"Search results for '{request_id}' request:  {paras}")
+        request_id = input.request_id
+        query = input.user_query
+        Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
 
-    Logger.info(f"Running on {os.getpid()}")
+        paras = [ p['content']  for p in input.search_results['content']]
+        Logger.info(f"Search results for '{request_id}' request:  {paras}")
 
-    # start = time.time()
-    # time.sleep(5)
-    # gen_qa=[]
-    # Logger.info("complete chain ran in {}s".format(round(time.time() - start, 4)))
+        Logger.info(f"Running on {os.getpid()}")
 
-    gen_qa, api_cnt, api_tokens, status = await generate_qa(paras, query)
+        # start = time.time()
+        # time.sleep(5)
+        # gen_qa=[]
+        # Logger.info("complete chain ran in {}s".format(round(time.time() - start, 4)))
 
-    Logger.info(f"{api_cnt} API Calls were made with an average of {api_tokens} tokens per call for qa generation")
+        raw_qa, api_cnt, api_tokens, status = await generate_qa(paras, query)
 
-    print(gen_qa)
+        Logger.info(f"{api_cnt} API Calls were made with an average of {api_tokens} tokens per call for qa generation")
+        print(raw_qa)
+
+        if len(raw_qa)>0:
+            gen_qa=[]
+            for qa in raw_qa:
+                qa_dict={}
+                citations = [c.strip('[').strip(']') for c in re.findall(r'\[\d+\]' ,qa['answer'])]
+                citations = list(OrderedDict.fromkeys([int(c) for c in citations if c.isdigit()]))
+                qa_dict['question'] = qa['question']
+                qa_dict['answer'] = re.sub(r'\[[^]]*\]','',qa['answer'])
+                ct = []
+                if len(citations)>0:
+                    for c in citations:
+                        if c<len(paras):
+                            ct.append(input.search_results['content'][c-1]['meta']['Ind_number'])
+                qa_dict['citations']=ct
+                gen_qa.append(qa_dict)
+        else:
+            gen_qa = []
+
+    except Exception as e:
+        Logger.error(traceback.format_exc())
+        gen_qa = []
 
     return gen_qa
 

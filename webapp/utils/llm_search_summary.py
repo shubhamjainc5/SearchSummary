@@ -81,7 +81,7 @@ async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int
             max_tokens=200,
             temperature=0,
             verbose=True,
-            request_timeout=20
+            request_timeout=30
         )
 
         template = "Ignore previous instructions.\n you are a part of search engine whose job is to find the answer of user's search query only from the provided search results and later provide a summarized answer from the relevant search results only."
@@ -199,7 +199,7 @@ async def generate_qa(paras: List[str], query: str) -> (List[Dict[str, str]], in
             max_tokens=1500,
             temperature=0,
             verbose=True,
-            request_timeout=25
+            request_timeout=30
         )
 
         template = "Ignore previous instructions.\n you are a part of search engine whose job is to generate pair of new questions and their summarized answers( MUST come from given search results only.)"
