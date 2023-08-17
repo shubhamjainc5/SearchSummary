@@ -124,12 +124,14 @@ async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int
             summary_result = json.loads(summary_result)
             Logger.info('\n Langchain json summary content parsed: {0}'.format(summary_result))
             #Logger.debug("langchain parsing ran in {}s".format(round(time.time() - start, 4)))
+            summary_result = {'Summary':''} if summary_result['Summary'].lower()=='not found' else summary_result
         except Exception as lang_err:
             Logger.error(traceback.format_exc())
             print(lang_err)
             summary_result = generated_summary[generated_summary.find('{'): generated_summary.rfind('}') + 1]
             summary_result = ast.literal_eval(summary_result)
             Logger.info('\n Regex json summary content parsed: {0}'.format(summary_result))
+            summary_result = {'Summary':''} if summary_result['Summary'].lower()=='not found' else summary_result
 
         return summary_result
 
@@ -145,32 +147,32 @@ async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int
         except (APIError, Timeout, ServiceUnavailableError) as e1:
             Logger.error(traceback.format_exc())
             Logger.error('ERROR: LLM SERVER Not responding')
-            result = {}
+            result = {'Summary':''}
             status = 'LLMServerError'
         except (RateLimitError, APIConnectionError, InvalidRequestError, AuthenticationError) as e3:
             Logger.error(traceback.format_exc())
             Logger.error('ERROR: Application server Not responding')
-            result = {}
+            result = {'Summary':''}
             status = 'AppServerError'
         except:
             Logger.error(traceback.format_exc())
             Logger.error('UNKNOWN ERROR: occurred')
-            result = {}
+            result = {'Summary':''}
             status = 'UnknownError'
     except (APIError, Timeout, ServiceUnavailableError) as e1:
         Logger.error(traceback.format_exc())
         Logger.error('ERROR: LLM SERVER Not responding')
-        result = {}
+        result = {'Summary':''}
         status = 'LLMServerError'
     except (RateLimitError, APIConnectionError, InvalidRequestError, AuthenticationError) as e3:
         Logger.error(traceback.format_exc())
         Logger.error('ERROR: Application server Not responding')
-        result = {}
+        result = {'Summary':''}
         status = 'AppServerError'
     except:
         Logger.error(traceback.format_exc())
         Logger.error('UNKNOWN ERROR: occurred')
-        result = {}
+        result = {'Summary':''}
         status = 'UnknownError'
 
     print('\n---------summary:{0}-------------\n'.format(status))

@@ -6,6 +6,6 @@ services:
         context: "./webapp/."
         dockerfile: ./Dockerfile
       ports:
-        - "8501:8501"
+        - "9050:9050"
       volumes:
-        - ./webapp:/opt
+        - /home/shubham/Downloads/LLMSearch/SearchSummary/webapp:/opt
