@@ -91,8 +91,6 @@ async def get_relqa(input: RelQA):
 
     Logger.info(f"Running on {os.getpid()}")
 
-    Logger.info(f"Running on {os.getpid()}")
-
     # start = time.time()
     # time.sleep(5)
     # gen_qa=[]
