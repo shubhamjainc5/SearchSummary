@@ -27,6 +27,7 @@ Also you must follow below instructions before coming up with the question and s
 2. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.
 3. Generate as many as possible combinations of distinct question and summarized answers.
 4. To ensure the credibility of summarized answers for each question, Be sure you MUST always include a correct citations number whenever necessary in brackets as [1], [2]...etc. based on provided search results after each phrase or sentence to indicate which part of provided search results supports summarized answer.
+5. If you can't come up with question and answers from the provided search results, then you MUST reply with [] in output json.
 \n{format_instructions}
 Output JSON:
 """

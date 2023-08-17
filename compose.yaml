@@ -8,4 +8,4 @@ services:
       ports:
         - "9050:9050"
       volumes:
-        - /home/shubham/Downloads/LLMSearch/SearchSummary/webapp:/opt
+        - /home/ubuntu/summary_qa/SearchSummary/webapp:/opt

@@ -40,19 +40,19 @@ async def get_summary(input: Summary):
 
     #     "Simplify cleaning and reduce VOCs by using fewer cleaning products. Choose or make products that you can use for several purposes. If you use fewer cleaners then you have are storing fewer chemicals in your home. Most cleaning products contain one or more of these basic cleaning ingredients: abrasive, alkali, acid, bleach, disinfectant and surfactants."]
 
-    # #query = "Why does earth rotate around sun?"
+    # query = "Why does earth rotate around sun?"
     # query = "how to remove hard-water stains?"
-    # #query = "how to remove dirt from my furniture?"
-    # #query = "fbsjfb sjfjs sjnosn jdjdj"
-    # #query = "What are VOCs?"
-    # #query="who is Obama?"
+    # query = "how to remove dirt from my furniture?"
+    # query = "fbsjfb sjfjs sjnosn jdjdj"
+    # query = "What are VOCs?"
+    # query="who is Obama?"
 
 
     request_id = input.request_id
     query = input.user_query
     Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
 
-    paras = [ p['text']  for p in input.search_results]
+    paras = [ p['content']  for p in input.search_results]
     Logger.info(f"Search results for '{request_id}' request:  {paras}")
 
     Logger.info(f"Running on {os.getpid()}")
@@ -86,7 +86,7 @@ async def get_relqa(input: RelQA):
     query = input.user_query
     Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
 
-    paras = [ p['text']  for p in input.search_results]
+    paras = [ p['content']  for p in input.search_results]
     Logger.info(f"Search results for '{request_id}' request:  {paras}")
 
     Logger.info(f"Running on {os.getpid()}")
