@@ -25,12 +25,12 @@ app.add_middleware(
 )
 
 class Summary(BaseModel):
-    request_id: str
+    requestId: int
     user_query: str
     search_results: Dict
 
 class RelQA(BaseModel):
-    request_id: str
+    requestId: int
     user_query: str
     search_results: Dict
 
@@ -50,12 +50,12 @@ async def get_summary(input: Summary):
     # query = "What are VOCs?"
     # query="who is Obama?"
     try:
-        request_id = input.request_id
+        requestId = input.requestId
         query = input.user_query
-        Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
+        Logger.info(f"Recieved '{requestId}' request for summary for '{query}' user query")
 
         paras = [ p['content']  for p in input.search_results['content']]
-        Logger.info(f"Search results for '{request_id}' request:  {paras}")
+        Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
         Logger.info(f"Running on {os.getpid()}")
 
@@ -105,12 +105,12 @@ async def get_relqa(input: RelQA):
 
     try:
 
-        request_id = input.request_id
+        requestId = input.requestId
         query = input.user_query
-        Logger.info(f"Recieved '{request_id}' request for summary for '{query}' user query")
+        Logger.info(f"Recieved '{requestId}' request for summary for '{query}' user query")
 
         paras = [ p['content']  for p in input.search_results['content']]
-        Logger.info(f"Search results for '{request_id}' request:  {paras}")
+        Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
         Logger.info(f"Running on {os.getpid()}")
 
