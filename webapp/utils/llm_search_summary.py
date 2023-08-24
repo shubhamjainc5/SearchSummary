@@ -15,8 +15,8 @@ from langchain.schema import OutputParserException
 
 from typing import List, Dict
 
-from utils.logging_handler import Logger
-from utils.timer import timed
+import logging
+Logger = logging.getLogger(__name__)
 import traceback
 import config
 
@@ -78,7 +78,7 @@ async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int
         model = AzureChatOpenAI(
             deployment_name=config.AZURE_DEPLOYMENT_NAME,
             model_name=config.AZURE_MODEL_NAME,
-            max_tokens=200,
+            max_tokens=500,
             temperature=0,
             verbose=True,
             request_timeout=30
@@ -199,7 +199,7 @@ async def generate_qa(paras: List[str], query: str) -> (List[Dict[str, str]], in
             max_tokens=1500,
             temperature=0,
             verbose=True,
-            request_timeout=30
+            request_timeout=45
         )
 
         template = "Ignore previous instructions.\n you are a part of search engine whose job is to generate pair of new questions and their summarized answers( MUST come from given search results only.)"

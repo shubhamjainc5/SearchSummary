@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from utils.logging_handler import Logger
 from utils.llm_search_summary import generate_summary, generate_qa
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -11,7 +10,25 @@ import json
 import traceback
 from collections import OrderedDict
 import re
+import uvicorn
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
+logging.basicConfig(filename='logs/app.log',
+                    filemode='a',
+    format='%(asctime)s,%(process)d %(name)s %(levelname)s %(message)s', level=logging.DEBUG)
+
+Logger = logging.getLogger(__name__)
+Logger.propagate = False
+Logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s,%(process)d %(name)s %(levelname)s %(message)s')
+handler = TimedRotatingFileHandler('logs/app.log',
+                                    when="W0",
+                                    interval=1,
+                                    backupCount=4)
+handler.setLevel(logging.INFO)
+handler.setFormatter(formatter)
+Logger.addHandler(handler)
 
 app = FastAPI()
 
@@ -37,18 +54,6 @@ class RelQA(BaseModel):
 @app.post("/llm_api/get_summary")
 async def get_summary(input: Summary):
 
-    # paras = ["An acid is often used to remove hard-water deposits, discoloration on metal surfaces and rust stains. White vinegar and lemon juice are mild acids that can be used in place of commercial products. Lemon juice should not be used on silver. Prolonged exposure to an acid may irritate the respiratory tract, so it is important to provide adequate ventilation when using the products.",
-
-    #     "People spend an average of 90 percent of their time indoors. Studies conducted by the Environmental Protection Agency(EPA) show levels of several common organic pollutants to be 2 to 5 times higher inside homes than outside. Many of these pollutants come from the volatile organic compounds (VOCs) released from household cleaning products. Indoor pollutants can be reduced by limiting the number of chemicals used indoors. By following three basic guidelines you can improve your indoor environment, save money and help conserve natural resources",
-
-    #     "Simplify cleaning and reduce VOCs by using fewer cleaning products. Choose or make products that you can use for several purposes. If you use fewer cleaners then you have are storing fewer chemicals in your home. Most cleaning products contain one or more of these basic cleaning ingredients: abrasive, alkali, acid, bleach, disinfectant and surfactants."]
-
-    # query = "Why does earth rotate around sun?"
-    # query = "how to remove hard-water stains?"
-    # query = "how to remove dirt from my furniture?"
-    # query = "fbsjfb sjfjs sjnosn jdjdj"
-    # query = "What are VOCs?"
-    # query="who is Obama?"
     try:
         requestId = input.requestId
         query = input.user_query
@@ -57,7 +62,7 @@ async def get_summary(input: Summary):
         paras = [ p['content']  for p in input.search_results['content']]
         Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
-        Logger.info(f"Running on {os.getpid()}")
+        # Logger.info(f"Running on {os.getpid()}")
 
         raw_summary, api_cnt, api_tokens, status = await generate_summary(paras, query)
 
@@ -70,38 +75,25 @@ async def get_summary(input: Summary):
             summary={}
             citations = [c.strip('[').strip(']') for c in re.findall(r'\[\d+\]' ,raw_summary['Summary'])]
             citations = list(OrderedDict.fromkeys([int(c) for c in citations if c.isdigit()]))
-            summary['Summary'] = re.sub(r'\[[^]]*\]','',raw_summary['Summary'])
-            ct = []
+            summary['Summary'] = raw_summary
+            ct = {}
             if len(citations)>0:
                 for c in citations:
-                    if c<len(paras):
-                        ct.append(input.search_results['content'][c-1]['meta']['Ind_number'])
+                    if c<len(paras)+1:
+                        ct[c] = input.search_results['content'][c-1]['meta']['Ind_number']
             summary['citations']=ct
         else:
-            summary = {'Summary':'', 'citations':[]}
+            summary = {'Summary':'', 'citations':{}}
         
     except Exception as e:
         Logger.error(traceback.format_exc())
-        summary = {'Summary':'', 'citations':[]}
+        summary = {'Summary':'', 'citations':{}}
 
     return summary
 
 
 @app.post("/llm_api/get_relqa")
 async def get_relqa(input: RelQA):
-
-    # paras = ["An acid is often used to remove hard-water deposits, discoloration on metal surfaces and rust stains. White vinegar and lemon juice are mild acids that can be used in place of commercial products. Lemon juice should not be used on silver. Prolonged exposure to an acid may irritate the respiratory tract, so it is important to provide adequate ventilation when using the products.",
-
-    #     "People spend an average of 90 percent of their time indoors. Studies conducted by the Environmental Protection Agency(EPA) show levels of several common organic pollutants to be 2 to 5 times higher inside homes than outside. Many of these pollutants come from the volatile organic compounds (VOCs) released from household cleaning products. Indoor pollutants can be reduced by limiting the number of chemicals used indoors. By following three basic guidelines you can improve your indoor environment, save money and help conserve natural resources",
-
-    #     "Simplify cleaning and reduce VOCs by using fewer cleaning products. Choose or make products that you can use for several purposes. If you use fewer cleaners then you have are storing fewer chemicals in your home. Most cleaning products contain one or more of these basic cleaning ingredients: abrasive, alkali, acid, bleach, disinfectant and surfactants."]
-
-    # #query = "Why does earth rotate around sun?"
-    # #query = "how to remove hard-water stains?"
-    # #query = "how to remove dirt from my furniture?"
-    # #query = "fbsjfb sjfjs sjnosn jdjdj"
-    # #query = "What are VOCs?"
-    # query="who is Obama?"
 
     try:
 
@@ -112,12 +104,7 @@ async def get_relqa(input: RelQA):
         paras = [ p['content']  for p in input.search_results['content']]
         Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
-        Logger.info(f"Running on {os.getpid()}")
-
-        # start = time.time()
-        # time.sleep(5)
-        # gen_qa=[]
-        # Logger.info("complete chain ran in {}s".format(round(time.time() - start, 4)))
+        # Logger.info(f"Running on {os.getpid()}")
 
         raw_qa, api_cnt, api_tokens, status = await generate_qa(paras, query)
 
@@ -131,12 +118,12 @@ async def get_relqa(input: RelQA):
                 citations = [c.strip('[').strip(']') for c in re.findall(r'\[\d+\]' ,qa['answer'])]
                 citations = list(OrderedDict.fromkeys([int(c) for c in citations if c.isdigit()]))
                 qa_dict['question'] = qa['question']
-                qa_dict['answer'] = re.sub(r'\[[^]]*\]','',qa['answer'])
-                ct = []
+                qa_dict['answer'] = qa['answer']
+                ct = {}
                 if len(citations)>0:
                     for c in citations:
-                        if c<len(paras):
-                            ct.append(input.search_results['content'][c-1]['meta']['Ind_number'])
+                        if c<len(paras)+1:
+                            ct[c]=input.search_results['content'][c-1]['meta']['Ind_number']
                 qa_dict['citations']=ct
                 gen_qa.append(qa_dict)
         else:
@@ -152,6 +139,8 @@ async def get_relqa(input: RelQA):
 async def root():
     return {'message': 'This is the backend endpoint of summary & QA retriver of search results by LLM service.'}
 
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=9050)
 
 # if __name__ == "__main__":
 
