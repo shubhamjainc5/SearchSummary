@@ -36,7 +36,6 @@ from langchain.prompts.chat import (
 
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field, validator
-from typing import List
 import ast
 
 
@@ -109,8 +108,8 @@ async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int
         generated_summary = gpt_op.generations[0][0].text
         #print(generated_summary)
 
-        #summary_prompt = summary_template.format(paras=paras, query=query, format_instructions=summary_format_instructions)
-        #print(summary_prompt)
+        summary_prompt = summary_template.format(paras=paras, query=query, format_instructions=summary_format_instructions)
+        print(summary_prompt)
         #summary_ip_tokens = model.get_num_tokens(summary_prompt)
         #summary_op_tokens = model.get_num_tokens(generated_summary)
         #print(summary_op_tokens)

@@ -12,3 +12,5 @@ OPENAI_API_VERSION = "2023-03-15-preview"
 OPENAI_API_BASE = "https://c5-openai-research.openai.azure.com/"
 # The API key for your Azure OpenAI resource.  You can find this in the Azure portal under your Azure OpenAI resource.
 OPEN_AI_API_KEY = "ec7bf13531a84991a8938c3722e03285"
+# Elastic search endpoint url
+ELASTIC_HOST_URL = "http://3.111.180.30:6000/haystack"

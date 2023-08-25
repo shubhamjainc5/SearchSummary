@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from utils.llm_search_summary import generate_summary, generate_qa
+from utils.doc_ranker import rerank_documents
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import asyncio
@@ -11,8 +12,11 @@ import traceback
 from collections import OrderedDict
 import re
 import uvicorn
+import requests
+import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import config
 
 logging.basicConfig(filename='logs/app.log',
                     filemode='a',
@@ -50,6 +54,45 @@ class RelQA(BaseModel):
     requestId: int
     user_query: str
     search_results: Dict
+
+class Rerank(BaseModel):
+    query: str
+    top_k: int
+
+
+@app.post("/rerank")
+async def rerank_document(input: Rerank):
+
+    try:
+        
+        query = input.query
+        top_k = input.top_k
+        Logger.info(f"Recieved request for summary for '{query}' user query")
+
+        start_time = time.time()
+        rs = requests.post(config.ELASTIC_HOST_URL,json= {"query":query,"top_k":top_k},
+                    headers={"Content-Type": "application/json"})
+        status_code = rs.status_code
+        Logger.info(f"Elastic search sent response with {status_code} status code")
+        if status_code==200:
+            
+            response_text = json.loads(rs.text)
+            Logger.info("Elastic search document retriveal took {:.4f} seconds".format(time.time() - start_time))
+
+            if len(response_text)>0:
+                start_time = time.time()
+                rerank_text = await rerank_documents(response_text,query)
+                Logger.info("Overall reranking took {:.4f} seconds".format(time.time() - start_time))
+            else:
+                rerank_text= []
+        else:
+            rerank_text= []
+    except Exception as e:
+        Logger.error(traceback.format_exc())
+        rerank_text= []
+
+    return json.dumps(rerank_text)
+
 
 @app.post("/llm_api/get_summary")
 async def get_summary(input: Summary):
