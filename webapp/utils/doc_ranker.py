@@ -10,7 +10,7 @@ import copy
 rerank_model = CrossEncoder('cross-encoder/ms-marco-TinyBERT-L-2')
 
 
-async def rerank_documents(response_text: List[Dict[str, str]], query: str) -> (List[Dict[str, str]]):
+async def rerank_documents(response_text: List[Dict[str, str]], query: str) -> (List[Dict[str, str]], str):
     print('\n---------Document encoder reranking-------------\n')
     
     try:
@@ -28,12 +28,14 @@ async def rerank_documents(response_text: List[Dict[str, str]], query: str) -> (
         start_time = time.time()
         rerank_text = sorted(rerank_text, key=lambda k: k['rerank_score'], reverse=True)
         print("document sorting took {:.4f} seconds".format(time.time() - start_time))
+        result_status = 'SUCCESS'
     except Exception as e:
         Logger.error(traceback.format_exc())
         Logger.error('ERROR: DOCUMENT RERANKING FAILED')
         rerank_text = response_text
+        result_status = 'ReRank Failed'
 
-    return rerank_text
+    return rerank_text, result_status
 
 
 # query = 'how to remove hard water stains?'

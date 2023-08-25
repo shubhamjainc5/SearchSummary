@@ -1,0 +1,6 @@
+fastapi[all]
+numpy
+langchain
+openai
+sentence_transformers
+pandas

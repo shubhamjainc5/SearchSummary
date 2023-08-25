@@ -78,20 +78,22 @@ async def rerank_document(input: Rerank):
             
             response_text = json.loads(rs.text)
             Logger.info("Elastic search document retriveal took {:.4f} seconds".format(time.time() - start_time))
-
             if len(response_text)>0:
                 start_time = time.time()
-                rerank_text = await rerank_documents(response_text,query)
+                rerank_text, result_status = await rerank_documents(response_text,query)
                 Logger.info("Overall reranking took {:.4f} seconds".format(time.time() - start_time))
             else:
                 rerank_text= []
+                result_status = 'Blank Elastic result'
         else:
             rerank_text= []
+            result_status = 'Elastic Failed'
     except Exception as e:
         Logger.error(traceback.format_exc())
         rerank_text= []
+        result_status = 'UnknownError'
 
-    return json.dumps(rerank_text)
+    return json.dumps({'content':rerank_text, 'status':result_status})
 
 
 @app.post("/llm_api/get_summary")
