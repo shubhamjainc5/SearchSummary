@@ -93,7 +93,7 @@ async def rerank_document(input: Rerank):
         rerank_text= []
         result_status = 'UnknownError'
 
-    return json.dumps({'content':rerank_text, 'status':result_status})
+    return {'content':rerank_text, 'status':result_status}
 
 
 @app.post("/llm_api/get_summary")
@@ -104,7 +104,7 @@ async def get_summary(input: Summary):
         query = input.user_query
         Logger.info(f"Recieved '{requestId}' request for summary for '{query}' user query")
 
-        paras = [ p['content']  for p in input.search_results['content']]
+        paras = [ p['meta']['text_pdf']  for p in input.search_results['content']]
         Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
         # Logger.info(f"Running on {os.getpid()}")
@@ -146,7 +146,7 @@ async def get_relqa(input: RelQA):
         query = input.user_query
         Logger.info(f"Recieved '{requestId}' request for summary for '{query}' user query")
 
-        paras = [ p['content']  for p in input.search_results['content']]
+        paras = [ p['meta']['text_pdf']  for p in input.search_results['content']]
         Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
         # Logger.info(f"Running on {os.getpid()}")

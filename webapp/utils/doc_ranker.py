@@ -16,7 +16,7 @@ async def rerank_documents(response_text: List[Dict[str, str]], query: str) -> (
     try:
         rerank_text = copy.deepcopy(response_text)
         start_time = time.time()
-        model_inputs = [[query, passage['content']] for passage in rerank_text]
+        model_inputs = [[query, passage['meta']['text_pdf']] for passage in rerank_text]
         rr_scores = rerank_model.predict(model_inputs)
         print("score calculation took {:.4f} seconds".format(time.time() - start_time))
 
