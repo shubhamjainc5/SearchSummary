@@ -64,7 +64,7 @@ class RelevantQuestionAnswers(BaseModel):
 
 
 
-async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int, float):
+async def generate_summary(paras: List[Dict[str, str]], query: str) -> (Dict[str, str], int, float):
     print('\n---------summary-------------\n')
     begin_start = time.time()
     cnt = 0
@@ -109,7 +109,7 @@ async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int
         #print(generated_summary)
 
         summary_prompt = summary_template.format(paras=paras, query=query, format_instructions=summary_format_instructions)
-        print(summary_prompt)
+        #print(summary_prompt)
         #summary_ip_tokens = model.get_num_tokens(summary_prompt)
         #summary_op_tokens = model.get_num_tokens(generated_summary)
         #print(summary_op_tokens)
@@ -182,7 +182,7 @@ async def generate_summary(paras: List[str], query: str) -> (Dict[str, str], int
 
 
 
-async def generate_qa(paras: List[str], query: str) -> (List[Dict[str, str]], int, float):
+async def generate_qa(paras: List[Dict[str, str]], query: str) -> (List[Dict[str, str]], int, float):
     print('\n---------RelevantQ&A-------------\n')
     begin_start= time.time()
     cnt = 0
@@ -297,5 +297,7 @@ async def generate_qa(paras: List[str], query: str) -> (List[Dict[str, str]], in
     Logger.debug("QA chain run ran in {}s".format(round(time.time() - begin_start , 4)))
 
     return result, cnt, 0 if len(call_tokens) == 0 else np.average(call_tokens), status
+
+
 
 

@@ -10,8 +10,9 @@ Your task is to understand user's query first and check if the answer for that q
 Also you must follow below instructions before coming up with the answer:    
 1. the final summarized answer MUST always come from the provided search results.    
 2. If you can't come up with the summarized answer from the provided search results or user's query seems to be not relevant to the  provided search results, then you MUST reply with "NOT FOUND" as summarized answer.
-3. To ensure the credibility of summarized answer, Be sure you MUST always include a correct citations number whenever necessary in brackets as [1], [2]...etc. based on provided search results after each phrase or sentence to indicate which part of provided search results supports summarized answer.
-4. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.
+3. To ensure the credibility of summarized answer, Be sure you MUST always include a correct Doc_number whenever necessary in brackets as [119], [21]...etc. based on provided search results after each phrase or sentence to indicate which part of provided search results supports summarized answer. 
+4. Each citation within summarized answer MUST strictly be in a seperate square brackets and should be in integer format like [119] ,[21], [1][2] etc.
+5. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.
 \n{format_instructions}
 Output JSON:
 """
@@ -26,8 +27,9 @@ Also you must follow below instructions before coming up with the question and s
 1. Generated question and summarized answers MUST always come from the provided search results.  
 2. Please you MUST never ever try to fabricate, mislead, make up the summarized answer.
 3. Generate as many as possible combinations of distinct question and summarized answers.
-4. To ensure the credibility of summarized answers for each question, Be sure you MUST always include a correct citations number whenever necessary in brackets as [1], [2]...etc. based on provided search results after each phrase or sentence to indicate which part of provided search results supports summarized answer.
-5. If you can't come up with question and answers from the provided search results, then you MUST reply with [] in output json.
+4. To ensure the credibility of summarized answers for each question, Be sure you MUST always include a correct Doc_number whenever necessary in square brackets as [119], [21]...etc. based on provided search results after each phrase or sentence to indicate which part of provided search results supports summarized answer.
+5. Each citation within each answer MUST strictly be in a seperate square brackets and should be in integer format like [119] ,[21], [1][2] etc. 
+6. If you can't come up with question and answers from the provided search results, then you MUST reply with [] in output json.
 \n{format_instructions}
 Output JSON:
 """
