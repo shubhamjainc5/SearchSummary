@@ -104,47 +104,52 @@ async def get_summary(input: Summary):
         query = input.user_query
         Logger.info(f"Recieved '{requestId}' request for summary for '{query}' user query")
 
-        paras = [ {"Doc_number":p['meta']['Ind_number'], "text":p['meta']['text_pdf']}  for p in input.search_results['content']]
+        top_k = 3
+
+        input_documents = input.search_results['content'][:top_k]
+
+        paras = [ {"Doc_number":i+1, "text":input_documents[i]['meta']['text_pdf']}  for i in range(len(input_documents))]
         Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
         raw_summary, api_cnt, api_tokens, status = await generate_summary(paras, query)
 
-        input_doc_numbers = { str(p['meta']['Ind_number']):(p['meta']['file_name'],p['meta']['page_num'])  for p in input.search_results['content']}
+        input_doc_numbers = { str(j+1):(input_documents[j]['meta']['file_name'],input_documents[j]['meta']['page_num'])  for j in range(len(input_documents))}
 
         Logger.info(f"{api_cnt} API Calls were made with an average of {api_tokens} tokens per call for summary generation")
 
         print(raw_summary)
 
-        # raw_summary = {'Summary': 'Yes, you[157] can charge your ThinkBook through the USB Type-C connector[165]. If you carry your computer around without the included AC power adapter, you may use a capable USB Type-C charger to provide power through the USB Type-C connector. The output power of a USB Type-C charger or the USB Type-C connector on a dock or display should be at least 20V and 2.25A in order to provide power to your computer [157].'}
+        # raw_summary = {'Summary': 'To connect to a Bluetooth-enabled device using your Lenovo laptop, you can follow these steps: 1. Click the action center icon in the Windows notification area. Enable the Bluetooth feature. [1][Doc_number:2] 2. Click the bluetooth options to add a bluetooth device, and then follow the on-screen instructions. [1] Alternatively, you can press Fn+F5 to enable the Bluetooth feature on your laptop. Then, right-click the data that you want to send and select Send To ➙ Bluetooth Devices. Choose a Bluetooth device from the list and follow the instructions on the screen. [2] If you are using Windows XP, you can double-click the My Bluetooth Places icon on the desktop. Then, go to Bluetooth Tasks and double-click View devices in range. Select the device you want to connect to and choose the service you want to use. [3]'}
 
         if raw_summary['Summary']!='':
             summary={}
-            citations = list(set([c.strip('[').strip(']') for c in re.findall(r'\[\d+\]' ,raw_summary['Summary'])]))
-            #citations = list(OrderedDict.fromkeys([int(c) for c in citations if c.isdigit()]))
             summary['Summary'] = raw_summary['Summary']
+
+            citations_matches = list(re.finditer(r'\[\d+\]', raw_summary['Summary']))
             ct_list = []
-            if len(citations)>0:
-                for c in citations:
-                    if c in list(input_doc_numbers.keys()):
-                        for match in re.finditer(c, raw_summary['Summary']):
-                            ct = {}
-                            ct['start'] = match.start()
-                            ct['end'] = match.end()
-                            ct ['file_name'] = input_doc_numbers[c][0]
-                            ct ['page_num'] = input_doc_numbers[c][1]
-                            ct ['Ind_number'] = int(c)
-                            # print (ct['start'], ct['end'], ct ['file_name'], ct ['page_num'])
-                            ct_list.append(ct)
+            if len(citations_matches)>0:
+                for match in citations_matches: 
+                    ct = {}
+                    ct['start'] = match.start()+1
+                    cit = raw_summary['Summary'][ct['start']]
+                    ct['end'] = match.start()+2
+                    ct ['file_name'] = input_doc_numbers[cit][0]
+                    ct ['page_num'] = input_doc_numbers[cit][1]
+                    ct ['Ind_number'] = int(raw_summary['Summary'][ct['start']])
+                    if cit in list(input_doc_numbers.keys()):
+                        ct_list.append(ct)
+                
             summary['citations']=ct_list
         else:
             summary = {'Summary':'', 'citations':[]}
-        Logger.info(f"response for executive summary call is {summary}")
         
+        Logger.info(f"response for executive summary call is {summary}")
+
     except Exception as e:
         Logger.error(traceback.format_exc())
         summary = {'Summary':'', 'citations':[]}
         Logger.info(f"response for executive summary call is {summary}")
-
+            
     return summary
 
 
@@ -157,39 +162,41 @@ async def get_relqa(input: RelQA):
         query = input.user_query
         Logger.info(f"Recieved '{requestId}' request for summary for '{query}' user query")
 
-        paras = [ {"Doc_number":p['meta']['Ind_number'], "text":p['meta']['text_pdf']}  for p in input.search_results['content']]
+        top_k = 3
+
+        input_documents = input.search_results['content'][:top_k]
+
+        paras = [ {"Doc_number":i+1, "text":input_documents[i]['meta']['text_pdf']}  for i in range(len(input_documents))]
         Logger.info(f"Search results for '{requestId}' request:  {paras}")
 
         raw_qa, api_cnt, api_tokens, status = await generate_qa(paras, query)
 
-        input_doc_numbers = { str(p['meta']['Ind_number']):(p['meta']['file_name'],p['meta']['page_num'])  for p in input.search_results['content']}
+        input_doc_numbers = { str(j+1):(input_documents[j]['meta']['file_name'],input_documents[j]['meta']['page_num'])  for j in range(len(input_documents))}
 
         Logger.info(f"{api_cnt} API Calls were made with an average of {api_tokens} tokens per call for qa generation")
         print(raw_qa)
 
-        # raw_qa = [{'question': 'How can I provide power to my computer without the included AC power adapter?', 'answer': 'In another scenario, if you carry your computer around [1]without the included ac power adapter, you may use a[165] capable USB Type-C charger to provide power[165] through the USB Type-C connector. [157]'}, {'question': 'What is the required output power for a USB Type-C charger or connector to provide power to a computer?', 'answer': 'The output power of a USB Type-C charger or the USB Type-C connector on a dock or display should be at least 20 V and 2.25 A in order to provide power to your computer. [157]'}, {'question': 'Can a computer receive power through the USB Type-C connector if it is already connected to an electrical outlet using the included power adapter?', 'answer': 'No, if the computer is already connected to an electrical outlet using the included power adapter, it will not receive power through the USB Type-C connector. [165]'}]
+        # raw_qa = [{'question': 'How do I enable the Bluetooth feature in Windows?', 'answer': 'To enable the Bluetooth feature in Windows, you can click the action center icon in the Windows[2] notification area and enable the Bluetooth feature. [1]'}, {'question': 'How can I send data via Bluetooth?', 'answer': 'To send data via Bluetooth, you can press Fn+F5 to enable the Bluetooth feature and then right-click the data that you want to send. Select Send To Bluetooth Devices and choose a Bluetooth device to send the data to. [2]'}, {'question': 'How do I access devices with Bluetooth enabled?', 'answer': 'To access devices with Bluetooth enabled, you can double-click the My Bluetooth Places icon on the desktop. For Windows XP, go to Bluetooth Tasks and double-click View devices in range. A list of devices with Bluetooth enabled will appear. Click on the device you want to access and select the service you want to use. [3]'}]
 
         if len(raw_qa)>0:
             gen_qa=[]
             for qa in raw_qa:
                 qa_dict={}
-                citations = list(set([c.strip('[').strip(']') for c in re.findall(r'\[\d+\]' ,qa['answer'])]))
-                # citations = list(OrderedDict.fromkeys([int(c) for c in citations if c.isdigit()]))
                 qa_dict['question'] = re.sub(r'\[[^]]*\]','',qa['question'])
                 qa_dict['answer'] = qa['answer']
+                citations_matches = list(re.finditer(r'\[\d+\]', qa['answer']))
                 ct_list = []
-                if len(citations)>0:
-                    for c in citations:
-                        if c in list(input_doc_numbers.keys()):
-                            for match in re.finditer(c, qa['answer']):
-                                ct = {}
-                                ct['start'] = match.start()
-                                ct['end'] = match.end()
-                                ct ['file_name'] = input_doc_numbers[c][0]
-                                ct ['page_num'] = input_doc_numbers[c][1]
-                                ct ['Ind_number'] = int(c)
-                                # print (ct['start'], ct['end'], ct ['file_name'], ct ['page_num'])
-                                ct_list.append(ct)
+                if len(citations_matches)>0:
+                    for match in citations_matches:
+                        ct = {}
+                        ct['start'] = match.start()+1
+                        cit = qa['answer'][ct['start']]
+                        ct['end'] = match.start()+2
+                        ct ['file_name'] = input_doc_numbers[cit][0]
+                        ct ['page_num'] = input_doc_numbers[cit][1]
+                        ct ['Ind_number'] = int(qa['answer'][ct['start']])
+                        if cit in list(input_doc_numbers.keys()):
+                            ct_list.append(ct)
                 qa_dict['citations']=ct_list
                 gen_qa.append(qa_dict)
         else:

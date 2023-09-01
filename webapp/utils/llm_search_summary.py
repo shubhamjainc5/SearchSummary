@@ -77,10 +77,11 @@ async def generate_summary(paras: List[Dict[str, str]], query: str) -> (Dict[str
         model = AzureChatOpenAI(
             deployment_name=config.AZURE_DEPLOYMENT_NAME,
             model_name=config.AZURE_MODEL_NAME,
-            max_tokens=500,
+            max_tokens=1000,
             temperature=0,
             verbose=True,
-            request_timeout=30
+            request_timeout=30,
+            max_retries=2
         )
 
         template = "Ignore previous instructions.\n you are a part of search engine whose job is to find the answer of user's search query only from the provided search results and later provide a summarized answer from the relevant search results only."
@@ -198,7 +199,8 @@ async def generate_qa(paras: List[Dict[str, str]], query: str) -> (List[Dict[str
             max_tokens=1500,
             temperature=0,
             verbose=True,
-            request_timeout=45
+            request_timeout=45,
+            max_retries=2
         )
 
         template = "Ignore previous instructions.\n you are a part of search engine whose job is to generate pair of new questions and their summarized answers( MUST come from given search results only.)"
