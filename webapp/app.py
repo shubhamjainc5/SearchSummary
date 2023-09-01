@@ -138,10 +138,12 @@ async def get_summary(input: Summary):
             summary['citations']=ct_list
         else:
             summary = {'Summary':'', 'citations':[]}
+        Logger.info(f"response for executive summary call is {summary}")
         
     except Exception as e:
         Logger.error(traceback.format_exc())
         summary = {'Summary':'', 'citations':[]}
+        Logger.info(f"response for executive summary call is {summary}")
 
     return summary
 
@@ -173,7 +175,7 @@ async def get_relqa(input: RelQA):
                 qa_dict={}
                 citations = list(set([c.strip('[').strip(']') for c in re.findall(r'\[\d+\]' ,qa['answer'])]))
                 # citations = list(OrderedDict.fromkeys([int(c) for c in citations if c.isdigit()]))
-                qa_dict['question'] = qa['question']
+                qa_dict['question'] = re.sub(r'\[[^]]*\]','',qa['question'])
                 qa_dict['answer'] = qa['answer']
                 ct_list = []
                 if len(citations)>0:
@@ -192,10 +194,12 @@ async def get_relqa(input: RelQA):
                 gen_qa.append(qa_dict)
         else:
             gen_qa = []
+        Logger.info(f"response for related QA  call is {gen_qa}")
 
     except Exception as e:
         Logger.error(traceback.format_exc())
         gen_qa = []
+        Logger.info(f"response for related QA call is {gen_qa}")
 
     return gen_qa
 
