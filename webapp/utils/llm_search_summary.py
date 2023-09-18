@@ -177,7 +177,7 @@ async def generate_summary(paras: List[Dict[str, str]], query: str) -> (Dict[str
 
     print('\n---------summary:{0}-------------\n'.format(status))
     Logger.info(f"\n---------summary:{status}-------------\n")
-    Logger.debug("summary chain run ran in {}s".format(round(time.time() - begin_start , 4)))
+    Logger.debug("summary chain from LLM ran in {}s".format(round(time.time() - begin_start , 4)))
 
     return result, cnt, 0 if len(call_tokens) == 0 else np.average(call_tokens), status
 
@@ -296,7 +296,7 @@ async def generate_qa(paras: List[Dict[str, str]], query: str) -> (List[Dict[str
 
     print('\n---------qa:{0}-------------\n'.format(status))
     Logger.info(f"\n---------qa:{status}-------------\n")
-    Logger.debug("QA chain run ran in {}s".format(round(time.time() - begin_start , 4)))
+    Logger.debug("QA chain from LLM ran in {}s".format(round(time.time() - begin_start , 4)))
 
     return result, cnt, 0 if len(call_tokens) == 0 else np.average(call_tokens), status
 

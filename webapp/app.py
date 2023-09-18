@@ -23,16 +23,16 @@ logging.basicConfig(filename='logs/app.log',
     format='%(asctime)s,%(process)d %(name)s %(levelname)s %(message)s', level=logging.DEBUG)
 
 Logger = logging.getLogger(__name__)
-Logger.propagate = False
+# Logger.propagate = False
 Logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s,%(process)d %(name)s %(levelname)s %(message)s')
-handler = TimedRotatingFileHandler('logs/app.log',
-                                    when="W0",
-                                    interval=1,
-                                    backupCount=4)
-handler.setLevel(logging.INFO)
-handler.setFormatter(formatter)
-Logger.addHandler(handler)
+# formatter = logging.Formatter('%(asctime)s,%(process)d %(name)s %(levelname)s %(message)s')
+# handler = TimedRotatingFileHandler('logs/app.log',
+#                                     when="W0",
+#                                     interval=1,
+#                                     backupCount=4)
+# handler.setLevel(logging.INFO)
+# handler.setFormatter(formatter)
+# Logger.addHandler(handler)
 
 app = FastAPI()
 
@@ -49,11 +49,15 @@ class Summary(BaseModel):
     requestId: int
     user_query: str
     search_results: Dict
+    channel_id: str
+    channel_index:str
 
 class RelQA(BaseModel):
     requestId: int
     user_query: str
     search_results: Dict
+    channel_id: str
+    channel_index:str
 
 class Rerank(BaseModel):
     query: str
@@ -98,6 +102,8 @@ async def rerank_document(input: Rerank):
 
 @app.post("/llm_api/get_summary")
 async def get_summary(input: Summary):
+
+    begin_start= time.time()
 
     try:
         requestId = input.requestId
@@ -149,18 +155,21 @@ async def get_summary(input: Summary):
         Logger.error(traceback.format_exc())
         summary = {'Summary':'', 'citations':[]}
         Logger.info(f"response for executive summary call is {summary}")
-            
+
+    Logger.info("summary API took {}s".format(round(time.time() - begin_start , 4)))
     return summary
 
 
 @app.post("/llm_api/get_relqa")
 async def get_relqa(input: RelQA):
 
+    begin_start= time.time()
+
     try:
 
         requestId = input.requestId
         query = input.user_query
-        Logger.info(f"Recieved '{requestId}' request for summary for '{query}' user query")
+        Logger.info(f"Recieved '{requestId}' request for QA for '{query}' user query")
 
         top_k = 3
 
@@ -208,6 +217,7 @@ async def get_relqa(input: RelQA):
         gen_qa = []
         Logger.info(f"response for related QA call is {gen_qa}")
 
+    Logger.info("Q&A API took {}s".format(round(time.time() - begin_start , 4)))
     return gen_qa
 
 @app.get('/api/')
